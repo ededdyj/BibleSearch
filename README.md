@@ -188,4 +188,11 @@ After results are shown you can:
 ---
 
 Happy studying!
+## 12. Streamlit App
 
+You can also launch a web interface using Streamlit:
+
+```bash
+pip install streamlit
+streamlit run streamlit_app.py
+```
