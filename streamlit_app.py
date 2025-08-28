@@ -6,6 +6,19 @@ from collections import defaultdict
 import streamlit as st
 from openai import OpenAI
 
+# Search cheat-sheet markdown
+SEARCH_CHEAT_SHEET_MD = """
+### Search Cheat Sheet
+
+- **substring**: kingdom
+- **whole‑word**: =love
+- **phrase**: "living water"
+- **regex**: /grace.*faith/
+- **AND**: love & joy
+- **OR**: mercy | grace
+- **Case flags**: append :c (case) or :i (ignore)
+"""
+
 # Pricing table for cost tracking
 MODEL_PRICES = {
     "gpt-3.5-turbo-0125": {"in": 0.0005, "out": 0.0015},
@@ -51,13 +64,16 @@ model = st.sidebar.selectbox("Model", list(MODEL_PRICES.keys()), index=list(MODE
 
 # Navigation: Book and Chapter selection
 st.sidebar.header("Navigation")
-book = st.sidebar.selectbox("Book", books)
-chap = st.sidebar.selectbox("Chapter", sorted(bible[book].keys()))
+book = st.sidebar.selectbox("Book", books, key="book")
+chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys()), key="chap")
 
 # Display the selected chapter
 st.header(f"{book} {chap}")
 for verse_num, verse_text in bible[book][chap].items():
     st.write(f"**{verse_num}.** {verse_text}")
+# Cheat-sheet expander
+with st.expander("Search Cheat Sheet", expanded=False):
+    st.markdown(SEARCH_CHEAT_SHEET_MD)
 
 # Search interface
 st.sidebar.header("Search")
@@ -78,10 +94,15 @@ if query:
     else:
         pattern = re.compile(re.escape(q), 0 if cs else re.IGNORECASE)
     hits = [(ref, raw[ref]) for ref in raw if pattern.search(raw[ref])]
-    st.write(f"Found {len(hits)} result(s)")
-    for ref, text in hits:
-        st.markdown(f"- **{ref}**: {text}")
-    context = "\n".join(f"{ref}: {text}" for ref, text in hits)
+    # render in expander
+    with st.expander(f"{len(hits)} Search Result(s)", expanded=True):
+        for i, (ref, text) in enumerate(hits):
+            highlighted = pattern.sub(lambda m: f"<mark>{m.group(0)}</mark>", text)
+            if st.button(ref, key=f"goto_{i}"):
+                parts = ref.rsplit(":", 1)[0].split()
+                st.session_state.book = " ".join(parts[:-1])
+                st.session_state.chap = int(parts[-1])
+            st.markdown(f"- **{ref}**: {highlighted}", unsafe_allow_html=True)
 
 # AI Q&A interface
 st.sidebar.header("AI Assistant")
