@@ -56,6 +56,18 @@ def load_bible():
 bible, raw = load_bible()
 books = list(bible.keys())
 
+# Initialize session state defaults
+if "book" not in st.session_state:
+    st.session_state.book = books[0]
+if "chap" not in st.session_state:
+    st.session_state.chap = sorted(bible[st.session_state.book].keys())[0]
+
+# Helper to navigate from search hit
+def go_to_ref(ref: str) -> None:
+    parts = ref.rsplit(":", 1)[0].split()
+    st.session_state.book = " ".join(parts[:-1])
+    st.session_state.chap = int(parts[-1])
+
 st.title("Bible Search + AI Assistant")
 
 # Sidebar configuration
@@ -67,42 +79,50 @@ st.sidebar.header("Navigation")
 book = st.sidebar.selectbox("Book", books, key="book")
 chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys()), key="chap")
 
-# Display the selected chapter
-st.header(f"{book} {chap}")
-for verse_num, verse_text in bible[book][chap].items():
-    st.write(f"**{verse_num}.** {verse_text}")
-# Cheat-sheet expander
-with st.expander("Search Cheat Sheet", expanded=False):
-    st.markdown(SEARCH_CHEAT_SHEET_MD)
+# Main view tabs: chapter vs search results
+tabs = st.tabs(["Chapter View", "Search Results"])
+with tabs[0]:
+    st.header(f"{book} {chap}")
+    for verse_num, verse_text in bible[book][chap].items():
+        st.write(f"**{verse_num}.** {verse_text}")
 
 # Search interface
 st.sidebar.header("Search")
 query = st.sidebar.text_input("Enter search term", "")
+st.sidebar.markdown(SEARCH_CHEAT_SHEET_MD)
 context = f"{book} {chap}\n" + "\n".join(f"{v}. {bible[book][chap][v]}" for v in sorted(bible[book][chap]))
-if query:
-    # Case sensitivity flags
-    cs = None
-    if query.endswith(":c"):
-        cs, q = True, query[:-2]
-    elif query.endswith(":i"):
-        cs, q = False, query[:-2]
-    else:
-        cs, q = False, query
-    # Regex or plain search
-    if q.startswith("/") and q.endswith("/") and len(q) >= 3:
-        pattern = re.compile(q[1:-1], 0 if cs else re.IGNORECASE)
-    else:
-        pattern = re.compile(re.escape(q), 0 if cs else re.IGNORECASE)
-    hits = [(ref, raw[ref]) for ref in raw if pattern.search(raw[ref])]
-    # render in expander
-    with st.expander(f"{len(hits)} Search Result(s)", expanded=True):
-        for i, (ref, text) in enumerate(hits):
-            highlighted = pattern.sub(lambda m: f"<mark>{m.group(0)}</mark>", text)
-            if st.button(ref, key=f"goto_{i}"):
-                parts = ref.rsplit(":", 1)[0].split()
-                st.session_state.book = " ".join(parts[:-1])
-                st.session_state.chap = int(parts[-1])
-            st.markdown(f"- **{ref}**: {highlighted}", unsafe_allow_html=True)
+
+with tabs[1]:
+    if query:
+        # Case sensitivity flags
+        cs = None
+        if query.endswith(":c"):
+            cs, q = True, query[:-2]
+        elif query.endswith(":i"):
+            cs, q = False, query[:-2]
+        else:
+            cs, q = False, query
+
+        # Regex or plain search
+        if q.startswith("/") and q.endswith("/") and len(q) >= 3:
+            pattern = re.compile(q[1:-1], 0 if cs else re.IGNORECASE)
+        else:
+            pattern = re.compile(re.escape(q), 0 if cs else re.IGNORECASE)
+
+        # Find hits
+        hits = [(ref, raw[ref]) for ref in raw if pattern.search(raw[ref])]
+
+        if not hits:
+            st.write("No matches found.")
+        else:
+            st.subheader(f"{len(hits)} Search Result(s)")
+            for i, (ref, text) in enumerate(hits):
+                highlighted = pattern.sub(lambda m: f"<mark>{m.group(0)}</mark>", text)
+                if st.button(ref, key=f"goto_{i}"):
+                    parts = ref.rsplit(":", 1)[0].split()
+                    st.session_state.book = " ".join(parts[:-1])
+                    st.session_state.chap = int(parts[-1])
+                st.markdown(f"- **{ref}**: {highlighted}", unsafe_allow_html=True)
 
 # AI Q&A interface
 st.sidebar.header("AI Assistant")
