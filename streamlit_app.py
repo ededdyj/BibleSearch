@@ -24,20 +24,20 @@ if not api_key:
     st.sidebar.warning("AI features disabled until API key is provided")
 client = OpenAI(api_key=api_key) if api_key else None
 
-# Load Bible data
-@st.cache_data
+# Load Bible data (no caching to avoid pickle issues)
 def load_bible():
     raw = json.load(open("verses-1769.json", encoding="utf-8"))
-    bible = defaultdict(lambda: defaultdict(dict))
+    bible = {}
     for ref, txt in raw.items():
         try:
             bc, verse = ref.rsplit(":", 1)
             parts = bc.split()
             book = " ".join(parts[:-1])
             chap = int(parts[-1])
-            bible[book][chap][int(verse)] = txt
+            verse_num = int(verse)
         except ValueError:
             continue
+        bible.setdefault(book, {}).setdefault(chap, {})[verse_num] = txt
     return bible, raw
 
 bible, raw = load_bible()
