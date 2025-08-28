@@ -118,10 +118,13 @@ with tabs[1]:
             st.subheader(f"{len(hits)} Search Result(s)")
             for i, (ref, text) in enumerate(hits):
                 highlighted = pattern.sub(lambda m: f"<mark>{m.group(0)}</mark>", text)
-                if st.button(ref, key=f"goto_{i}"):
-                    parts = ref.rsplit(":", 1)[0].split()
-                    st.session_state.book = " ".join(parts[:-1])
-                    st.session_state.chap = int(parts[-1])
+                # navigate to chapter on click via callback
+                st.button(
+                    ref,
+                    key=f"goto_{i}",
+                    on_click=go_to_ref,
+                    args=(ref,)
+                )
                 st.markdown(f"- **{ref}**: {highlighted}", unsafe_allow_html=True)
 
 # AI Q&A interface
