@@ -14,11 +14,15 @@ MODEL_PRICES = {
 DEFAULT_MODEL = "gpt-3.5-turbo-0125"
 TEMPERATURE = 0.5
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
-if not getattr(client, "api_key", None):
-    st.error("Please set the OPENAI_API_KEY environment variable")
-    st.stop()
+# Get API key from env or user input
+api_key = os.getenv("OPENAI_API_KEY", "")
+api_key = st.sidebar.text_input(
+    "OpenAI API key", value=api_key, type="password",
+    help="Enter your OpenAI API key for AI features"
+)
+if not api_key:
+    st.sidebar.warning("AI features disabled until API key is provided")
+client = OpenAI(api_key=api_key) if api_key else None
 
 # Load Bible data
 @st.cache_data
@@ -83,28 +87,31 @@ if query:
 st.sidebar.header("AI Assistant")
 question = st.sidebar.text_input("Ask AI", "")
 if st.sidebar.button("Ask AI") and question.strip():
-    prompt = (
-        "You are a helpful Bible study assistant.\n\n"
-        f"CONTEXT:\n{context}\n\nQUESTION: {question}\n\n"
-        "Answer clearly and concisely."
-    )
-    with st.spinner("Contacting AI..."):
-        resp = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=TEMPERATURE,
+    if not client:
+        st.error("API key missing; cannot perform AI call")
+    else:
+        prompt = (
+            "You are a helpful Bible study assistant.\n\n"
+            f"CONTEXT:\n{context}\n\nQUESTION: {question}\n\n"
+            "Answer clearly and concisely."
         )
-    answer = resp.choices[0].message.content.strip()
-    usage = resp.usage
-    price = MODEL_PRICES.get(model, {"in": 0, "out": 0})
-    cost = (usage.prompt_tokens * price["in"] + usage.completion_tokens * price["out"]) / 1000
-    if "total_cost" not in st.session_state:
-        st.session_state.total_cost = 0.0
-        st.session_state.total_tokens = 0
-    st.session_state.total_cost += cost
-    st.session_state.total_tokens += usage.prompt_tokens + usage.completion_tokens
-    st.subheader("AI Answer")
-    st.write(answer)
-    st.sidebar.write(f"Tokens: {usage.prompt_tokens + usage.completion_tokens}")
-    st.sidebar.write(f"Cost this call: ${cost:.4f}")
-    st.sidebar.write(f"Cumulative cost: ${st.session_state.total_cost:.4f}")
+        with st.spinner("Contacting AI..."):
+            resp = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=TEMPERATURE,
+            )
+        answer = resp.choices[0].message.content.strip()
+        usage = resp.usage
+        price = MODEL_PRICES.get(model, {"in": 0, "out": 0})
+        cost = (usage.prompt_tokens * price["in"] + usage.completion_tokens * price["out"]) / 1000
+        if "total_cost" not in st.session_state:
+            st.session_state.total_cost = 0.0
+            st.session_state.total_tokens = 0
+        st.session_state.total_cost += cost
+        st.session_state.total_tokens += usage.prompt_tokens + usage.completion_tokens
+        st.subheader("AI Answer")
+        st.write(answer)
+        st.sidebar.write(f"Tokens: {usage.prompt_tokens + usage.completion_tokens}")
+        st.sidebar.write(f"Cost this call: ${cost:.4f}")
+        st.sidebar.write(f"Cumulative cost: ${st.session_state.total_cost:.4f}")
