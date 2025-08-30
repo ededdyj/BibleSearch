@@ -75,25 +75,30 @@ st.sidebar.title("Options")
 model = st.sidebar.selectbox("Model", list(MODEL_PRICES.keys()), index=list(MODEL_PRICES.keys()).index(DEFAULT_MODEL))
 
 # Navigation: Book and Chapter selection
+# Navigation: Book and Chapter selection
 st.sidebar.header("Navigation")
 book = st.sidebar.selectbox("Book", books, key="book")
 chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys()), key="chap")
 
-# Chapter navigation buttons
-first_chap = sorted(bible[st.session_state.book].keys())[0]
-last_chap = sorted(bible[st.session_state.book].keys())[-1]
-prev_disabled = chap <= first_chap
-next_disabled = chap >= last_chap
-col1, col2 = st.sidebar.columns([1, 1])
-if col1.button("Previous Chapter", disabled=prev_disabled):
-    st.session_state.chap = chap - 1
-if col2.button("Next Chapter", disabled=next_disabled):
-    st.session_state.chap = chap + 1
+# Functions to move chapters via callbacks
+def prev_chapter():
+    st.session_state.chap -= 1
+
+def next_chapter():
+    st.session_state.chap += 1
 
 # Main view tabs: chapter vs search results
 tabs = st.tabs(["Chapter View", "Search Results"])
 with tabs[0]:
     st.header(f"{book} {chap}")
+
+    # Chapter navigation buttons
+    first_chap = sorted(bible[book].keys())[0]
+    last_chap = sorted(bible[book].keys())[-1]
+    col1, col2 = st.columns([1, 1])
+    col1.button("Previous Chapter", on_click=prev_chapter, disabled=chap <= first_chap)
+    col2.button("Next Chapter", on_click=next_chapter, disabled=chap >= last_chap)
+
     for verse_num, verse_text in bible[book][chap].items():
         st.write(f"**{verse_num}.** {verse_text}")
 
