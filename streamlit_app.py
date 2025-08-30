@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import streamlit as st
 import requests
+import streamkjv
 import unicodedata
 from openai import OpenAI
 
@@ -87,6 +88,11 @@ def list_book_chapters(book_name: str):
                 chapters[chap] = url
     return chapters
 
+@st.cache_data
+def list_mp3bible_chapters(book_name: str):
+    """Return chapter stream URLs from mp3bible.ca for a given KJV book."""
+    return dict(streamkjv.list_chapter_files(book_name))
+
 # Initialize session state defaults
 if "book" not in st.session_state:
     st.session_state.book = books[0]
@@ -119,6 +125,13 @@ chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys(
 
 # top-level view selector to switch between chapter and search views
 view = st.sidebar.radio("View", ["Chapter View", "Search Results"], index=0, key="view")
+# Audio source selection
+audio_source = st.sidebar.selectbox(
+    "Audio source",
+    ["Archive.org", "mp3bible.ca"],
+    index=0,
+    key="audio_source",
+)
 
 # Functions to move chapters via callbacks
 def prev_chapter():
@@ -202,7 +215,10 @@ if view == "Chapter View":
 
     # ——— Audio Playback ———
     st.subheader("Audio Playback")
-    chap_manifest = list_book_chapters(book)
+    if audio_source == "Archive.org":
+        chap_manifest = list_book_chapters(book)
+    else:
+        chap_manifest = list_mp3bible_chapters(book)
     audio_url = chap_manifest.get(chap)
     if audio_url:
         st.audio(audio_url)
