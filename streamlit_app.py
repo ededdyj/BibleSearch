@@ -4,7 +4,6 @@ import re
 from collections import defaultdict
 
 import streamlit as st
-import requests
 import streamkjv
 import unicodedata
 from openai import OpenAI
@@ -59,34 +58,11 @@ def load_bible():
 bible, raw = load_bible()
 books = list(bible.keys())
 
-# Internet Archive KJV audio metadata
-ITEM_ID = "kjvaudio"
-META_URL = f"https://archive.org/metadata/{ITEM_ID}"
 
 def normalize(s: str) -> str:
     """Normalize to ASCII lowercase for matching."""
     return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
 
-@st.cache_data
-def list_book_chapters(book_name: str):
-    """Return {chapter_number: stream URL} for a given KJV book."""
-    resp = requests.get(META_URL, timeout=20)
-    resp.raise_for_status()
-    data = resp.json()
-    book_norm = normalize(book_name)
-    chapters = {}
-    for f in data.get("files", []):
-        name = f.get("name", "")
-        if not name.lower().endswith(".mp3"):
-            continue
-        n = normalize(name)
-        if book_norm in n:
-            nums = re.findall(r"(\d+)", name)
-            if nums:
-                chap = int(nums[-1])
-                url = f"https://archive.org/download/{ITEM_ID}/{name}"
-                chapters[chap] = url
-    return chapters
 
 @st.cache_data
 def list_mp3bible_chapters(book_name: str):
@@ -125,13 +101,6 @@ chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys(
 
 # top-level view selector to switch between chapter and search views
 view = st.sidebar.radio("View", ["Chapter View", "Search Results"], index=0, key="view")
-# Audio source selection
-audio_source = st.sidebar.selectbox(
-    "Audio source",
-    ["Archive.org", "mp3bible.ca"],
-    index=0,
-    key="audio_source",
-)
 
 # Functions to move chapters via callbacks
 def prev_chapter():
@@ -215,10 +184,7 @@ if view == "Chapter View":
 
     # ——— Audio Playback ———
     st.subheader("Audio Playback")
-    if audio_source == "Archive.org":
-        chap_manifest = list_book_chapters(book)
-    else:
-        chap_manifest = list_mp3bible_chapters(book)
+    chap_manifest = list_mp3bible_chapters(book)
     audio_url = chap_manifest.get(chap)
     if audio_url:
         st.audio(audio_url)

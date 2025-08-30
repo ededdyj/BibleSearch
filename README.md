@@ -4,8 +4,7 @@ A versatile Bible study tool with both a terminal-based CLI and a Streamlit-powe
 
 **Features**
 - **CLI interface**: navigate by book/chapter, perform searches (substring, whole‑word, phrase, regex, Boolean AND/OR, case flags), built-in search cheat-sheet, AI Q&A, live model switching, cost tracking, rich console output.
-- **Web interface (Streamlit)**: chapter and search views, AI assistant sidebar, search cheat-sheet expander, audio streaming from Internet Archive (kjvaudio), direct download URL and fallback streaming support.
-- **Audio streaming**: stream or download KJV audio from Archive.org using `kjvaudio_metadata.json` and the included `audio/` folder.
+- **Web interface (Streamlit)**: chapter and search views, AI assistant sidebar, search cheat-sheet expander, audio streaming controls via mp3bible.ca.
 - **JSON data support**: uses `verses-1769.json` for KJV verse data; drop in your own translation with the same key format.
 - **Customization**: tweak search logic, output style, AI prompts, model pricing, or swap in your translation.
 
@@ -65,7 +64,7 @@ The Streamlit app (`streamlit_app.py`) provides:
 - Sidebar controls for book/chapter navigation and view selection (Chapter View vs Search Results)
 - Embedded search cheat-sheet and search input
 - AI assistant with model selection and cost display
-- Audio streaming controls to play KJV audio from Archive.org
+- Audio streaming controls to play KJV audio from mp3bible.ca
 - Previous/Next audio chapter navigation buttons
 
 Launch with `streamlit run streamlit_app.py` and open the provided local URL.
@@ -73,8 +72,7 @@ Launch with `streamlit run streamlit_app.py` and open the provided local URL.
 ## Data Files
 
 - `verses-1769.json`: KJV (1769) verse data in `{"Book Chap:Verse": "text"}` format.
-- `kjvaudio_metadata.json`: cached metadata for KJV audio files (downloaded from Archive.org).
-- `audio/`: optional folder to store downloaded MP3 files.
+- `streamkjv.py`: utility to fetch and stream KJV audio chapters from mp3bible.ca.
 
 ## Configuration
 
