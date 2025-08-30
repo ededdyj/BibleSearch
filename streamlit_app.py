@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 
 import streamlit as st
+import requests
 from openai import OpenAI
 
 # Search cheat-sheet markdown
@@ -55,6 +56,16 @@ def load_bible():
 
 bible, raw = load_bible()
 books = list(bible.keys())
+
+@st.cache_data
+def fetch_audio_file_list():
+    """Fetch the KJV audio-by-chapter file list from Archive.org metadata."""
+    try:
+        meta = requests.get("https://archive.org/metadata/kjvaudio").json()
+        files = meta.get("files", [])
+        return [f["name"] for f in files if f.get("format", "").lower().startswith("mpeg")]
+    except Exception:
+        return []
 
 # Initialize session state defaults
 if "book" not in st.session_state:
@@ -168,6 +179,18 @@ if view == "Chapter View":
     col1, col2 = st.columns([1, 1])
     col1.button("Previous Chapter", key="prev_bottom", on_click=prev_chapter, disabled=prev_disabled)
     col2.button("Next Chapter", key="next_bottom", on_click=next_chapter, disabled=next_disabled)
+
+    # ——— Audio Playback ———
+    audio_files = fetch_audio_file_list()
+    lookup_key = f"{book.replace(' ', '_')}_{chap:02d}"
+    match = next((fn for fn in audio_files if lookup_key.lower() in fn.lower()), None)
+
+    if match:
+        audio_url = f"https://archive.org/download/kjvaudio/{match}"
+        st.subheader("Audio Playback")
+        st.audio(audio_url)
+    else:
+        st.warning("Audio not found for this chapter.")
 
 # Search interface
 st.sidebar.header("Search")
