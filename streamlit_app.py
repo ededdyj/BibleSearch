@@ -64,6 +64,8 @@ if "chap" not in st.session_state:
 
 # Helper to navigate from search hit
 def go_to_ref(ref: str) -> None:
+    # switch back to chapter view when navigating from search
+    st.session_state.view = "Chapter View"
     parts = ref.rsplit(":", 1)[0].split()
     st.session_state.book = " ".join(parts[:-1])
     st.session_state.chap = int(parts[-1])
@@ -79,6 +81,9 @@ model = st.sidebar.selectbox("Model", list(MODEL_PRICES.keys()), index=list(MODE
 st.sidebar.header("Navigation")
 book = st.sidebar.selectbox("Book", books, key="book")
 chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys()), key="chap")
+
+# top-level view selector to switch between chapter and search views
+view = st.sidebar.radio("View", ["Chapter View", "Search Results"], index=0, key="view")
 
 # Functions to move chapters via callbacks
 def prev_chapter():
@@ -111,9 +116,7 @@ def next_chapter():
             st.session_state.book = next_book
             st.session_state.chap = sorted(bible[next_book].keys())[0]
 
-# Main view tabs: chapter vs search results
-tabs = st.tabs(["Chapter View", "Search Results"])
-with tabs[0]:
+if view == "Chapter View":
     st.header(f"{book} {chap}")
 
     # Chapter navigation buttons
@@ -168,8 +171,7 @@ query = st.sidebar.text_input("Enter search term", "")
 st.sidebar.markdown(SEARCH_CHEAT_SHEET_MD)
 context = f"{book} {chap}\n" + "\n".join(f"{v}. {bible[book][chap][v]}" for v in sorted(bible[book][chap]))
 
-with tabs[1]:
-    if query:
+if view == "Search Results" and query:
         # Case sensitivity flags
         cs = None
         if query.endswith(":c"):
