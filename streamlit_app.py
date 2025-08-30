@@ -136,6 +136,15 @@ def next_chapter():
 if view == "Chapter View":
     st.header(f"{book} {chap}")
 
+    # Audio Playback
+    st.subheader("Audio Playback")
+    chap_manifest = list_mp3bible_chapters(book)
+    audio_url = chap_manifest.get(chap)
+    if audio_url:
+        st.audio(audio_url)
+    else:
+        st.warning("Audio not found for this chapter.")
+
     # Chapter navigation buttons
     chaps = sorted(bible[book].keys())
     first_chap = chaps[0]
@@ -181,15 +190,6 @@ if view == "Chapter View":
     col1, col2 = st.columns([1, 1])
     col1.button("Previous Chapter", key="prev_bottom", on_click=prev_chapter, disabled=prev_disabled)
     col2.button("Next Chapter", key="next_bottom", on_click=next_chapter, disabled=next_disabled)
-
-    # ——— Audio Playback ———
-    st.subheader("Audio Playback")
-    chap_manifest = list_mp3bible_chapters(book)
-    audio_url = chap_manifest.get(chap)
-    if audio_url:
-        st.audio(audio_url)
-    else:
-        st.warning("Audio not found for this chapter.")
 
 # Search interface
 st.sidebar.header("Search")
