@@ -124,16 +124,16 @@ with tabs[0]:
     prev_disabled = book_idx == 0 and chap == first_chap
     next_disabled = book_idx == len(books) - 1 and chap == last_chap
     col1, col2 = st.columns([1, 1])
-    col1.button("Previous Chapter", on_click=prev_chapter, disabled=prev_disabled)
-    col2.button("Next Chapter", on_click=next_chapter, disabled=next_disabled)
+    col1.button("Previous Chapter", key="prev_top", on_click=prev_chapter, disabled=prev_disabled)
+    col2.button("Next Chapter", key="next_top", on_click=next_chapter, disabled=next_disabled)
 
     for verse_num, verse_text in bible[book][chap].items():
         st.write(f"**{verse_num}.** {verse_text}")
 
     # Bottom navigation buttons
     col1, col2 = st.columns([1, 1])
-    col1.button("Previous Chapter", on_click=prev_chapter, disabled=prev_disabled)
-    col2.button("Next Chapter", on_click=next_chapter, disabled=next_disabled)
+    col1.button("Previous Chapter", key="prev_bottom", on_click=prev_chapter, disabled=prev_disabled)
+    col2.button("Next Chapter", key="next_bottom", on_click=next_chapter, disabled=next_disabled)
 
 # Search interface
 st.sidebar.header("Search")
