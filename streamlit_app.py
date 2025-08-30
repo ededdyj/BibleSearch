@@ -127,8 +127,24 @@ with tabs[0]:
     col1.button("Previous Chapter", key="prev_top", on_click=prev_chapter, disabled=prev_disabled)
     col2.button("Next Chapter", key="next_top", on_click=next_chapter, disabled=next_disabled)
 
-    for verse_num, verse_text in bible[book][chap].items():
-        st.write(f"**{verse_num}.** {verse_text}")
+    # Format verses into paragraphs based on markers
+    paras = []
+    current = []
+    for verse_num in sorted(bible[book][chap]):
+        raw_text = bible[book][chap][verse_num]
+        if raw_text.lstrip().startswith("#"):
+            if current:
+                paras.append(" ".join(current))
+            text = re.sub(r"^\s*#\s*", "", raw_text)
+            text = re.sub(r"\[([^\]]+)\]", r"*\1*", text)
+            current = [f"**{verse_num}.** {text}"]
+        else:
+            text = re.sub(r"\[([^\]]+)\]", r"*\1*", raw_text)
+            current.append(f"**{verse_num}.** {text}")
+    if current:
+        paras.append(" ".join(current))
+    for para in paras:
+        st.markdown(para)
 
     # Bottom navigation buttons
     col1, col2 = st.columns([1, 1])
