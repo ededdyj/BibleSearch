@@ -1,198 +1,92 @@
-# Bible Reader + OpenAI Assistant
+# Bible Search + AI Assistant
 
-A terminal Bible reader with a built‑in OpenAI helper. It lets you:
+A versatile Bible study tool with both a terminal-based CLI and a Streamlit-powered web interface.
 
-- Navigate by **book/chapter**
-- Run **powerful searches** (substring, whole‑word, phrase, regex, Boolean AND/OR, case flags)
-- Ask **AI questions** about a chapter or your search results
-- **Switch models** on the fly and **track token cost**
-- Enjoy **rich colour output** (via `rich`) while preserving `[bracketed]` text
-- Pull up a built‑in **search cheat‑sheet** with the `searchguide` command
+**Features**
+- **CLI interface**: navigate by book/chapter, perform searches (substring, whole‑word, phrase, regex, Boolean AND/OR, case flags), built-in search cheat-sheet, AI Q&A, live model switching, cost tracking, rich console output.
+- **Web interface (Streamlit)**: chapter and search views, AI assistant sidebar, search cheat-sheet expander, audio streaming from Internet Archive (kjvaudio), direct download URL and fallback streaming support.
+- **Audio streaming**: stream or download KJV audio from Archive.org using `kjvaudio_metadata.json` and the included `audio/` folder.
+- **JSON data support**: uses `verses-1769.json` for KJV verse data; drop in your own translation with the same key format.
+- **Customization**: tweak search logic, output style, AI prompts, model pricing, or swap in your translation.
 
----
-
-## 1. Quick Start
+## Quick Start
 
 ```bash
-# 1) Clone / copy the repo files
-python -m venv .venv && source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt  # (see below if you don’t have a requirements file)
+git clone <repo-url>
+cd BibleSearch
+python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-# 2) Set your OpenAI key
-export OPENAI_API_KEY="sk-..."   # PowerShell: $env:OPENAI_API_KEY="sk-..."
+### CLI Mode
 
-# 3) Run it
+```bash
+export OPENAI_API_KEY="sk-..."
 python bible_reader.py
 ```
 
-You’ll see:
+### Web Mode (Streamlit)
 
+```bash
+export OPENAI_API_KEY="sk-..."
+streamlit run streamlit_app.py
 ```
-Bible reader started – 2025-07-22 13:37
+
+## CLI Usage
+
+Run `python bible_reader.py` and use the interactive prompts:
+
+```text
+Bible reader started – YYYY-MM-DD HH:MM:SS
 Books of the Bible:
 1. Genesis
 2. Exodus
 ...
-
 Book | search | searchguide | ai | model | exit:
 ```
 
-Type `searchguide` to view the search cheat‑sheet.
+- **Book**: type a book name exactly (e.g., `Genesis`, `1 Samuel`)
+- **search**: enter search mode (supports substring, whole-word, phrase, regex, AND/OR, case flags)
+- **searchguide**: view the built-in search cheat-sheet
+- **ai**: ask AI about the current context (chapter or search results)
+- **model**: change the AI model and view cost info
+- **exit**: quit the program
 
----
-
-## 2. Requirements
-
-- **Python 3.9+** (tested on 3.11 but earlier 3.9+ should be fine)
-- Packages:
-  - `openai>=1.0.0`
-  - `rich` (optional—pretty output)
-
-If you don’t have a `requirements.txt`, create one:
+Inside a chapter view, you can use:
 
 ```text
-openai>=1.0.0
-rich>=13.0.0
+[n]ext | [p]rev | [ai] | [model] | [b]ooks | exit
 ```
 
-Then `pip install -r requirements.txt`.
+## Web Interface
 
----
+The Streamlit app (`streamlit_app.py`) provides:
 
-## 3. Files
+- Sidebar controls for book/chapter navigation and view selection (Chapter View vs Search Results)
+- Embedded search cheat-sheet and search input
+- AI assistant with model selection and cost display
+- Audio streaming controls to play KJV audio from Archive.org
+- Previous/Next audio chapter navigation buttons
 
-- `bible_reader.py` – the main script
-- `verses-1769.json` – KJV (1769) verse data in `{"Book Chap:Verse": "text"}` format
+Launch with `streamlit run streamlit_app.py` and open the provided local URL.
 
-> Drop your own translation by keeping the same key pattern (e.g., `"John 3:16"`).
+## Data Files
 
----
+- `verses-1769.json`: KJV (1769) verse data in `{"Book Chap:Verse": "text"}` format.
+- `kjvaudio_metadata.json`: cached metadata for KJV audio files (downloaded from Archive.org).
+- `audio/`: optional folder to store downloaded MP3 files.
 
-## 4. Environment Setup
+## Configuration
 
-1. **OpenAI API key** – required for AI answers:
+- **OPENAI_API_KEY**: environment variable for OpenAI API key (required for AI features).
+- **MODEL_PRICES**: adjust pricing table in code to track AI costs.
+- **Search Behavior**: tweak search logic in `bible_reader.py` or `streamlit_app.py`.
+- **UI Style**: disable or customize Rich or Streamlit styles as needed.
 
-   - Set `OPENAI_API_KEY` in your environment (preferred), or
-   - Let the script prompt you interactively the first run.
+## Contributing
 
-2. **Colours** – `rich` is optional. Without it, output is plain text.
+Contributions welcome! Please open issues or pull requests for feature suggestions or bug fixes.
 
----
+## License
 
-## 5. Usage Flow
-
-### Main Prompt
-
-```
-Book | search | searchguide | ai | model | exit:
-```
-
-- **Book** – type a book name *exactly* as listed (e.g. `Genesis`, `1 Samuel`)
-- **search** – open the search input
-- **searchguide** – display cheat‑sheet and return directly to prompt
-- **ai** – ask the assistant about the *last* context (if any)
-- **model** – change the model used for AI queries
-- **exit** – quit
-
-### Chapter View Prompt
-
-```
-[n]ext [p]rev [ai] [model] [b]ooks [exit]:
-```
-
-- **n** / **p** – move chapter forward/back
-- **ai** – ask about the currently viewed chapter
-- **model** – switch AI model
-- **b** – back to main menu (books list)
-- **exit** – quit immediately
-
----
-
-## 6. Search Cheat‑Sheet
-
-| Mode       | Example          | Meaning                            |                        |
-| ---------- | ---------------- | ---------------------------------- | ---------------------- |
-| substring  | `kingdom`        | Finds verses containing `kingdom`  |                        |
-| whole‑word | `=love`          | Matches `love` as a whole word     |                        |
-| phrase     | `"living water"` | Exact phrase                       |                        |
-| regex      | `/grace.*faith/` | Raw Python regex (dotall not set)  |                        |
-| AND        | `love & joy`     | Both terms must appear             |                        |
-| OR         | \`mercy          | grace\`                            | Either term may appear |
-| case flag  | `:c` / `:i`      | Force case sensitive / insensitive |                        |
-
-**Case flags** append to the *entire query*. Example: `love & joy :c` (no space before `:c` in the code, but your query must end with `:c` or `:i`).
-
-After results are shown you can:
-
-- Enter a **result number** to jump to that verse’s chapter
-- Type **ai** to ask questions about the full hit list
-- Press **Enter** to cancel and keep the context
-
----
-
-## 7. AI Q&A
-
-- Context = either the **current chapter** or the **current search results** (hit list)
-- Enter your question when prompted
-- The model, temperature, and costs are shown after each call
-
-### Switching Models
-
-- `model` at any prompt → pick by name or number
-- Default pricing table is defined in `MODEL_PRICES`
-- Add your own models (i.e., `gpt-4.1-mini`) and cost values as needed
-
-### Cost Tracking
-
-- Each call reports **cost this call** and **cumulative** based on token usage and the table in `MODEL_PRICES`.
-
----
-
-## 8. Customization Tips
-
-- **Translations**: swap in a different JSON with the same key pattern
-- **Search behaviour**: tweak `_token_to_regex` and `search()` logic
-- **Output style**: adjust Rich colors or disable Rich entirely
-- **Prompt text**: change the system instructions in `ask_ai()` for different AI behaviour
-- **Budget model table**: edit `MODEL_PRICES`
-
----
-
-## 9. Troubleshooting
-
-| Problem                            | Fix / Hint                                           |
-| ---------------------------------- | ---------------------------------------------------- |
-| `ModuleNotFoundError: openai`      | `pip install openai`                                 |
-| `openai.error.AuthenticationError` | Check `OPENAI_API_KEY` is set correctly              |
-| `Could not parse reference: ...`   | Your verse JSON key didn’t match `"Book Chap:Verse"` |
-| `No matches found.` on search      | Check regex/flags. Try a simpler query               |
-| Colours look weird / escape codes  | Install `rich` or run without it (it falls back)     |
-
----
-
-## 10. License / Data
-
-- Scripture text file (`verses-1769.json`) is presumed public domain (KJV 1769). Verify licensing for any translation you add.
-- Code is yours to use/modify. Add a formal license section if you plan to publish.
-
----
-
-## 11. Roadmap Ideas
-
-- Cross‑verse context (e.g., show a few verses before/after hits)
-- Save/load last session state
-- Export search results to a file (CSV/Markdown)
-- Inline footnotes and cross‑references
-- Batch AI queries (e.g., summarize each chapter)
-
----
-
-Happy studying!
-## 12. Streamlit App
-
-You can also launch a web interface using Streamlit:
-
-```bash
-pip install streamlit
-streamlit run streamlit_app.py
-```
+Scripture data (`verses-1769.json`) is presumed public domain (KJV 1769). Code is provided without warranty; add a license if desired before publishing.
