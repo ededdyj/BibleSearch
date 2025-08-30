@@ -146,11 +146,16 @@ with tabs[0]:
             current.append(text)
     if current is not None:
         paras.append((current_num, current))
-    # render paragraphs: keep verse numbers for all verses
+    # render paragraphs: keep verse numbers, no gaps between verses
     for num, lines in paras:
+        para = ""
         for idx, line in enumerate(lines):
             verse_num = num + idx
-            st.markdown(f"**{verse_num}.** {line}")
+            if idx == 0:
+                para = f"**{verse_num}.** {line}"
+            else:
+                para += "  \n" + f"**{verse_num}.** {line}"
+        st.markdown(para)
 
     # Bottom navigation buttons
     col1, col2 = st.columns([1, 1])
