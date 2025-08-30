@@ -79,6 +79,17 @@ st.sidebar.header("Navigation")
 book = st.sidebar.selectbox("Book", books, key="book")
 chap = st.sidebar.selectbox("Chapter", sorted(bible[st.session_state.book].keys()), key="chap")
 
+# Chapter navigation buttons
+first_chap = sorted(bible[st.session_state.book].keys())[0]
+last_chap = sorted(bible[st.session_state.book].keys())[-1]
+prev_disabled = chap <= first_chap
+next_disabled = chap >= last_chap
+col1, col2 = st.sidebar.columns([1, 1])
+if col1.button("Previous Chapter", disabled=prev_disabled):
+    st.session_state.chap = chap - 1
+if col2.button("Next Chapter", disabled=next_disabled):
+    st.session_state.chap = chap + 1
+
 # Main view tabs: chapter vs search results
 tabs = st.tabs(["Chapter View", "Search Results"])
 with tabs[0]:
