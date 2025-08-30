@@ -146,12 +146,11 @@ with tabs[0]:
             current.append(text)
     if current is not None:
         paras.append((current_num, current))
-    # render paragraphs: each verse on its own line without mid-paragraph numbers
+    # render paragraphs: keep verse numbers for all verses
     for num, lines in paras:
-        para = f"**{num}.** {lines[0]}"
-        for line in lines[1:]:
-            para += "  \n" + line
-        st.markdown(para)
+        for idx, line in enumerate(lines):
+            verse_num = num + idx
+            st.markdown(f"**{verse_num}.** {line}")
 
     # Bottom navigation buttons
     col1, col2 = st.columns([1, 1])
