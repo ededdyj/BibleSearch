@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import streamlit as st
 import requests
+import unicodedata
 from openai import OpenAI
 
 # Search cheat-sheet markdown
@@ -57,15 +58,34 @@ def load_bible():
 bible, raw = load_bible()
 books = list(bible.keys())
 
+# Internet Archive KJV audio metadata
+ITEM_ID = "kjvaudio"
+META_URL = f"https://archive.org/metadata/{ITEM_ID}"
+
+def normalize(s: str) -> str:
+    """Normalize to ASCII lowercase for matching."""
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
+
 @st.cache_data
-def fetch_audio_file_list():
-    """Fetch the KJV audio-by-chapter file list from Archive.org metadata."""
-    try:
-        meta = requests.get("https://archive.org/metadata/kjvaudio").json()
-        files = meta.get("files", [])
-        return [f["name"] for f in files if f.get("format", "").lower().startswith("mpeg")]
-    except Exception:
-        return []
+def list_book_chapters(book_name: str):
+    """Return {chapter_number: stream URL} for a given KJV book."""
+    resp = requests.get(META_URL, timeout=20)
+    resp.raise_for_status()
+    data = resp.json()
+    book_norm = normalize(book_name)
+    chapters = {}
+    for f in data.get("files", []):
+        name = f.get("name", "")
+        if not name.lower().endswith(".mp3"):
+            continue
+        n = normalize(name)
+        if book_norm in n:
+            nums = re.findall(r"(\d+)", name)
+            if nums:
+                chap = int(nums[-1])
+                url = f"https://archive.org/download/{ITEM_ID}/{name}"
+                chapters[chap] = url
+    return chapters
 
 # Initialize session state defaults
 if "book" not in st.session_state:
@@ -182,12 +202,12 @@ if view == "Chapter View":
 
     # ——— Audio Playback ———
     st.subheader("Audio Playback")
-    # Stream directly using the standard download filename convention
-    audio_url = (
-        f"https://archive.org/download/kjvaudio/"
-        f"{book.replace(' ', '_')}_{chap:02d}.mp3"
-    )
-    st.audio(audio_url)
+    chap_manifest = list_book_chapters(book)
+    audio_url = chap_manifest.get(chap)
+    if audio_url:
+        st.audio(audio_url)
+    else:
+        st.warning("Audio not found for this chapter.")
 
 # Search interface
 st.sidebar.header("Search")
