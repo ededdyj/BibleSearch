@@ -182,15 +182,18 @@ if view == "Chapter View":
 
     # ——— Audio Playback ———
     audio_files = fetch_audio_file_list()
-    lookup_key = f"{book.replace(' ', '_')}_{chap:02d}"
-    match = next((fn for fn in audio_files if lookup_key.lower() in fn.lower()), None)
-
-    if match:
-        audio_url = f"https://archive.org/download/kjvaudio/{match}"
-        st.subheader("Audio Playback")
-        st.audio(audio_url)
+    # Try to match any file containing both the book name and chapter number
+    lc_book = book.lower().replace(' ', '_')
+    chap_str = str(chap)
+    candidates = [fn for fn in audio_files if lc_book in fn.lower() and chap_str in fn]
+    if candidates:
+        audio_fn = candidates[0]
+        audio_url = f"https://archive.org/download/kjvaudio/{audio_fn}"
     else:
-        st.warning("Audio not found for this chapter.")
+        # Fallback to direct URL pattern in case metadata matching fails
+        audio_url = f"https://archive.org/stream/kjvaudio/{book.replace(' ', '_')}_{chap:02d}.mp3"
+    st.subheader("Audio Playback")
+    st.audio(audio_url)
 
 # Search interface
 st.sidebar.header("Search")
