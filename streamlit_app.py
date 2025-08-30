@@ -182,6 +182,9 @@ if view == "Chapter View":
 
     # ——— Audio Playback ———
     audio_files = fetch_audio_file_list()
+    # Debug: show first 20 audio filenames fetched
+    with st.expander('Debug: first 20 audio files', expanded=False):
+        st.write(audio_files[:20])
     # Try to match any file containing both the book name and chapter number
     lc_book = book.lower().replace(' ', '_')
     chap_str = str(chap)
