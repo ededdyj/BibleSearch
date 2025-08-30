@@ -70,6 +70,10 @@ def go_to_ref(ref: str) -> None:
     st.session_state.book = " ".join(parts[:-1])
     st.session_state.chap = int(parts[-1])
 
+def _on_search_change() -> None:
+    """Switch UI to Search Results when a new search is entered."""
+    st.session_state.view = "Search Results"
+
 st.title("Bible Search + AI Assistant")
 
 # Sidebar configuration
@@ -167,7 +171,10 @@ if view == "Chapter View":
 
 # Search interface
 st.sidebar.header("Search")
-query = st.sidebar.text_input("Enter search term", "")
+# auto-switch to search results when entering a new query
+query = st.sidebar.text_input(
+    "Enter search term", "", key="query", on_change=_on_search_change
+)
 st.sidebar.markdown(SEARCH_CHEAT_SHEET_MD)
 context = f"{book} {chap}\n" + "\n".join(f"{v}. {bible[book][chap][v]}" for v in sorted(bible[book][chap]))
 
