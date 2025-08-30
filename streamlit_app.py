@@ -127,23 +127,30 @@ with tabs[0]:
     col1.button("Previous Chapter", key="prev_top", on_click=prev_chapter, disabled=prev_disabled)
     col2.button("Next Chapter", key="next_top", on_click=next_chapter, disabled=next_disabled)
 
-    # Format verses into paragraphs based on markers
+    # Format verses into paragraphs based on markers and separate lines
     paras = []
-    current = []
+    current = None
+    current_num = None
     for verse_num in sorted(bible[book][chap]):
         raw_text = bible[book][chap][verse_num]
-        if raw_text.lstrip().startswith("#"):
-            if current:
-                paras.append(" ".join(current))
-            text = re.sub(r"^\s*#\s*", "", raw_text)
-            text = re.sub(r"\[([^\]]+)\]", r"*\1*", text)
-            current = [f"**{verse_num}.** {text}"]
+        # strip paragraph marker and italicize bracketed text
+        text = re.sub(r"^\s*#\s*", "", raw_text)
+        text = re.sub(r"\[([^\]]+)\]", r"*\1*", text)
+        if raw_text.lstrip().startswith("#") or current is None:
+            # start a new paragraph
+            if current is not None:
+                paras.append((current_num, current))
+            current_num = verse_num
+            current = [text]
         else:
-            text = re.sub(r"\[([^\]]+)\]", r"*\1*", raw_text)
-            current.append(f"**{verse_num}.** {text}")
-    if current:
-        paras.append(" ".join(current))
-    for para in paras:
+            current.append(text)
+    if current is not None:
+        paras.append((current_num, current))
+    # render paragraphs: each verse on its own line without mid-paragraph numbers
+    for num, lines in paras:
+        para = f"**{num}.** {lines[0]}"
+        for line in lines[1:]:
+            para += "  \n" + line
         st.markdown(para)
 
     # Bottom navigation buttons
