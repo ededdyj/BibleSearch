@@ -66,9 +66,12 @@ def main():
             # sequentially index Hebrew tokens to align with KJV words
             token_idx = 0
             for w in verse.findall('osis:w', NS):
+                # extract Strong's number (last segment after any slashes)
+                w_strong = w.attrib.get('lemma', '')
+                hs_num = w_strong.split('/')[-1]
                 entry = {
-                    'strongs': w.attrib.get('lemma', ''),
-                    'lemma': w.attrib.get('lemma', ''),
+                    'strongs': hs_num,
+                    'lemma': w.text or '',
                     'morph': w.attrib.get('morph', ''),
                     'def': ''
                 }
