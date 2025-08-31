@@ -6,6 +6,8 @@ from collections import defaultdict
 import streamlit as st
 import streamkjv
 import unicodedata
+import subprocess
+import sys
 from openai import OpenAI
 
 # Search cheat-sheet markdown
@@ -57,6 +59,22 @@ def load_bible():
 
 bible, raw = load_bible()
 books = list(bible.keys())
+
+def load_interlinear(path: str = "kjv_interlinear.json"):
+    """Load interlinear mapping of KJV words to original language (Strong's, lemma, morphology)."""
+    try:
+        return json.load(open(path, encoding="utf-8"))
+    except FileNotFoundError:
+        wlc_dir = os.path.join("data", "morphhb", "wlc")
+        if os.path.isdir(wlc_dir):
+            if st.sidebar.button("Generate interlinear JSON", key="gen_interlinear"):
+                subprocess.run([sys.executable, "generate_interlinear.py"])
+                st.sidebar.success("Generated kjv_interlinear.json")
+                return json.load(open(path, encoding="utf-8"))
+        st.sidebar.warning(f"Interlinear data '{path}' not found; original-language lookup disabled.")
+        return {}
+
+interlinear = load_interlinear()
 
 
 def normalize(s: str) -> str:
@@ -156,35 +174,27 @@ if view == "Chapter View":
     col1.button("Previous Chapter", key="prev_top", on_click=prev_chapter, disabled=prev_disabled)
     col2.button("Next Chapter", key="next_top", on_click=next_chapter, disabled=next_disabled)
 
-    # Format verses into paragraphs based on markers and separate lines
-    paras = []
-    current = None
-    current_num = None
+    # Render each verse as clickable word buttons with lemma lookup
     for verse_num in sorted(bible[book][chap]):
         raw_text = bible[book][chap][verse_num]
-        # strip paragraph marker and italicize bracketed text
         text = re.sub(r"^\s*#\s*", "", raw_text)
         text = re.sub(r"\[([^\]]+)\]", r"*\1*", text)
-        if raw_text.lstrip().startswith("#") or current is None:
-            # start a new paragraph
-            if current is not None:
-                paras.append((current_num, current))
-            current_num = verse_num
-            current = [text]
-        else:
-            current.append(text)
-    if current is not None:
-        paras.append((current_num, current))
-    # render paragraphs: keep verse numbers, no gaps between verses
-    for num, lines in paras:
-        para = ""
-        for idx, line in enumerate(lines):
-            verse_num = num + idx
-            if idx == 0:
-                para = f"**{verse_num}.** {line}"
-            else:
-                para += "  \n" + f"**{verse_num}.** {line}"
-        st.markdown(para)
+        words = text.split()
+        cols = st.columns(len(words) + 1)
+        cols[0].markdown(f"**{verse_num}.**")
+        for idx, w in enumerate(words):
+            key = f"word_{book}_{chap}_{verse_num}_{idx}"
+            if cols[idx + 1].button(w, key=key):
+                st.session_state.lookup = (book, chap, verse_num, idx)
+    # Display original-language lookup in sidebar
+    if st.session_state.get("lookup") and interlinear:
+        b, c, v, i = st.session_state.lookup
+        verse_key = f"{b} {c}:{v}"
+        lemma_info = interlinear.get(verse_key, {}).get(str(i), {})
+        if lemma_info:
+            st.sidebar.markdown(f"**Original word:** {lemma_info.get('lemma','')} ({lemma_info.get('strongs','')})")
+            st.sidebar.markdown(f"**Morphology:** {lemma_info.get('morph','')}")
+            st.sidebar.markdown(f"**Definition:** {lemma_info.get('def','')}")
 
     # Bottom navigation buttons
     col1, col2 = st.columns([1, 1])

@@ -85,6 +85,15 @@ Launch with `streamlit run streamlit_app.py` and open the provided local URL.
 
 Contributions welcome! Please open issues or pull requests for feature suggestions or bug fixes.
 
+## Interlinear Lookup
+
+Place a `kjv_interlinear.json` file (mapping each verse & word-index to original‑language info: Strong’s number, lemma, morphology, definition) in the project root to enable clickable word lookups in the Streamlit chapter view.
+
+You can auto-generate this file from the bundled OSIS morphology data:
+```bash
+python generate_interlinear.py
+```
+
 ## License
 
 Scripture data (`verses-1769.json`) is presumed public domain (KJV 1769). Code is provided without warranty; add a license if desired before publishing.
