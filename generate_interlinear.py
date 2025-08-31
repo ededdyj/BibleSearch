@@ -90,12 +90,20 @@ def main():
             defs_map = resp.json() if resp.ok else {}
         except Exception:
             defs_map = {}
-    # Populate definition field from defs_map keyed by Strong's number
+    # Unwrap 'dict' if present and prepare definitions mapping
+    if 'dict' in defs_map:
+        defs_map = defs_map['dict']
+    # Populate definition field from defs_map by matching H-number and extracting <def>...
+    import re
     for tokens in interlinear.values():
         for entry in tokens.values():
             strong = entry.get('strongs', '')
-            key = strong.split('/')[-1]
-            entry['def'] = defs_map.get(key, '')
+            # ensure leading H for Strong's code
+            key = strong if strong.upper().startswith('H') else f'H{strong}'
+            info = defs_map.get(key, {})
+            meaning_html = info.get('meaning', '')
+            m = re.search(r'<def>(.*?)</def>', meaning_html)
+            entry['def'] = m.group(1) if m else ''
 
     out_path = 'kjv_interlinear.json'
     with open(out_path, 'w', encoding='utf-8') as f:
