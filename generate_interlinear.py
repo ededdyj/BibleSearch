@@ -26,19 +26,35 @@ OSIS_TO_BOOK = {
 NS = {'osis': 'http://www.bibletechnologies.net/2003/OSIS/namespace'}
 
 def main():
+    # Load versification map (WLC -> KJV) to align verses
+    verse_map = {}
+    vm_file = os.path.join('data', 'morphhb', 'wlc', 'VerseMap.xml')
+    VM_NS = {'vm': 'http://www.APTBibleTools.com/namespace'}
+    if os.path.isfile(vm_file):
+        vm_tree = ET.parse(vm_file)
+        vm_root = vm_tree.getroot()
+        for bk in vm_root.findall('vm:book', VM_NS):
+            for v_node in bk.findall('vm:verse', VM_NS):
+                wlc_id = v_node.attrib.get('wlc')
+                kjv_id = v_node.attrib.get('kjv')
+                if wlc_id and kjv_id:
+                    verse_map[wlc_id] = kjv_id
+
     interlinear = {}
     wlc_dir = os.path.join('data', 'morphhb', 'wlc')
     for fname in os.listdir(wlc_dir):
-        if not fname.endswith('.xml'):
+        if not fname.endswith('.xml') or fname == 'VerseMap.xml':
             continue
         path = os.path.join(wlc_dir, fname)
         tree = ET.parse(path)
         root = tree.getroot()
         # find all verse elements
         for verse in root.findall('.//osis:verse', NS):
-            osis_id = verse.attrib.get('osisID')
-            if not osis_id:
+            wlc_id = verse.attrib.get('osisID')
+            if not wlc_id:
                 continue
+            # map WLC verse to KJV versification if needed
+            osis_id = verse_map.get(wlc_id, wlc_id)
             parts = osis_id.split('.')
             if len(parts) != 3:
                 continue
