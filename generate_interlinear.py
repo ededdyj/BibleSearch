@@ -63,18 +63,17 @@ def main():
             if not book:
                 continue
             key = f"{book} {chap}:{verse_no}"
+            # sequentially index Hebrew tokens to align with KJV words
+            token_idx = 0
             for w in verse.findall('osis:w', NS):
-                n_attr = w.attrib.get('n')
-                if not n_attr:
-                    continue
-                idx = n_attr.split('.')[-1]
                 entry = {
                     'strongs': w.attrib.get('lemma', ''),
                     'lemma': w.attrib.get('lemma', ''),
                     'morph': w.attrib.get('morph', ''),
                     'def': ''
                 }
-                interlinear.setdefault(key, {})[idx] = entry
+                interlinear.setdefault(key, {})[str(token_idx)] = entry
+                token_idx += 1
     out_path = 'kjv_interlinear.json'
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(interlinear, f, ensure_ascii=False, indent=2)
