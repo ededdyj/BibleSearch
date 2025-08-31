@@ -195,6 +195,8 @@ if view == "Chapter View":
             st.sidebar.markdown(f"**Original word:** {lemma_info.get('lemma','')} ({lemma_info.get('strongs','')})")
             st.sidebar.markdown(f"**Morphology:** {lemma_info.get('morph','')}")
             st.sidebar.markdown(f"**Definition:** {lemma_info.get('def','')}")
+        else:
+            st.sidebar.info("No interlinear data for this word.")
 
     # Bottom navigation buttons
     col1, col2 = st.columns([1, 1])
