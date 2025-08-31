@@ -69,9 +69,12 @@ def main():
                 # extract Strong's number (last segment after any slashes)
                 w_strong = w.attrib.get('lemma', '')
                 hs_num = w_strong.split('/')[-1]
+                # strip any prefix affixes in the Hebrew token (e.g. "ו/..." → last segment)
+                raw_text = w.text or ''
+                lemma_text = raw_text.split('/')[-1]
                 entry = {
                     'strongs': hs_num,
-                    'lemma': w.text or '',
+                    'lemma': lemma_text,
                     'morph': w.attrib.get('morph', ''),
                     'def': ''
                 }
