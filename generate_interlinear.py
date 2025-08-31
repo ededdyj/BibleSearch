@@ -74,6 +74,26 @@ def main():
                 }
                 interlinear.setdefault(key, {})[str(token_idx)] = entry
                 token_idx += 1
+    # Augment entries with Strong's definitions if available
+    defs_map = {}
+    defs_path = 'strongs_definitions.json'
+    if os.path.isfile(defs_path):
+        defs_map = json.load(open(defs_path, encoding='utf-8'))
+    else:
+        try:
+            import requests
+            url = 'https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/HebrewLexicon.text.json'
+            resp = requests.get(url)
+            defs_map = resp.json() if resp.ok else {}
+        except Exception:
+            defs_map = {}
+    # Populate definition field from defs_map keyed by Strong's number
+    for tokens in interlinear.values():
+        for entry in tokens.values():
+            strong = entry.get('strongs', '')
+            key = strong.split('/')[-1]
+            entry['def'] = defs_map.get(key, '')
+
     out_path = 'kjv_interlinear.json'
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(interlinear, f, ensure_ascii=False, indent=2)
