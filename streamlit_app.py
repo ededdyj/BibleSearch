@@ -8,6 +8,7 @@ import streamkjv
 import unicodedata
 import subprocess
 import sys
+import string
 from openai import OpenAI
 
 # Search cheat-sheet markdown
@@ -179,7 +180,8 @@ if view == "Chapter View":
         raw_text = bible[book][chap][verse_num]
         text = re.sub(r"^\s*#\s*", "", raw_text)
         text = re.sub(r"\[([^\]]+)\]", r"*\1*", text)
-        words = text.split()
+        # strip punctuation so word index matches interlinear tokens
+        words = [w.strip(string.punctuation) for w in text.split()]
         cols = st.columns(len(words) + 1)
         cols[0].markdown(f"**{verse_num}.**")
         for idx, w in enumerate(words):
