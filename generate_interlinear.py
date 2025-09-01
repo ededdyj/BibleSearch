@@ -10,7 +10,7 @@ import json
 import os
 import xml.etree.ElementTree as ET
 
-# Map OSIS book codes to English book names matching verses-1769.json keys
+# Map OSIS book codes to English book names matching kjv_strongs.json keys
 OSIS_TO_BOOK = {
     'Gen': 'Genesis', 'Exod': 'Exodus', 'Lev': 'Leviticus', 'Num': 'Numbers', 'Deut': 'Deuteronomy',
     'Josh': 'Joshua', 'Judg': 'Judges', 'Ruth': 'Ruth', '1Sam': '1 Samuel', '2Sam': '2 Samuel',

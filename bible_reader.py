@@ -97,7 +97,7 @@ def log_cost(model: str, prompt_t: int, comp_t: int) -> None:
 # ──────────────────────────────────────────────────────────────────────────
 
 # ─── Load Bible JSON ──────────────────────────────────────────────────────
-with open("verses-1769.json", encoding="utf-8") as f:
+with open("kjv_strongs.json", encoding="utf-8") as f:
     raw = json.load(f)
 
 bible: defaultdict[str, defaultdict[int, dict[int, str]]] = defaultdict(lambda: defaultdict(dict))

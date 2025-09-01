@@ -44,7 +44,7 @@ client = OpenAI(api_key=api_key) if api_key else None
 
 # Load Bible data (no caching to avoid pickle issues)
 def load_bible():
-    raw = json.load(open("verses-1769.json", encoding="utf-8"))
+    raw = json.load(open("kjv_strongs.json", encoding="utf-8"))
     bible = {}
     for ref, txt in raw.items():
         try:

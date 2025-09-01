@@ -5,7 +5,7 @@ A versatile Bible study tool with both a terminal-based CLI and a Streamlit-powe
 **Features**
 - **CLI interface**: navigate by book/chapter, perform searches (substring, whole‑word, phrase, regex, Boolean AND/OR, case flags), built-in search cheat-sheet, AI Q&A, live model switching, cost tracking, rich console output.
 - **Web interface (Streamlit)**: chapter and search views, AI assistant sidebar, search cheat-sheet expander, audio streaming controls via mp3bible.ca.
-- **JSON data support**: uses `verses-1769.json` for KJV verse data; drop in your own translation with the same key format.
+- **JSON data support**: uses `kjv_strongs.json` for KJV Strong's verse data; drop in your own translation with the same key format.
 - **Customization**: tweak search logic, output style, AI prompts, model pricing, or swap in your translation.
 
 ## Quick Start
